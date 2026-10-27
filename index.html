@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GM Walks Markdown Studio</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Markdown preview elements */
+        #preview h1 { font-size: 2rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 1rem; border-bottom: 1px solid #374151; padding-bottom: 0.5rem; color: #f3f4f6; }
+        #preview h2 { font-size: 1.5rem; font-weight: bold; margin-top: 1.5rem; margin-bottom: 0.75rem; border-bottom: 1px solid #374151; padding-bottom: 0.25rem; color: #60a5fa; }
+        #preview h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #93c5fd; }
+        #preview p { margin-bottom: 1rem; line-height: 1.6; color: #d1d5db; }
+        #preview ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; color: #d1d5db; }
+        #preview ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; color: #d1d5db; }
+        #preview li { margin-bottom: 0.25rem; }
+        #preview dl { margin-bottom: 1rem; background: #1f2937; padding: 1rem; border-radius: 0.375rem; border: 1px solid #374151; }
+        #preview dt { font-weight: bold; color: #93c5fd; margin-top: 0.5rem; }
+        #preview dd { margin-left: 1rem; color: #d1d5db; margin-bottom: 0.5rem; }
+        #preview blockquote { border-left: 4px solid #3b82f6; padding-left: 1rem; margin-left: 0; margin-right: 0; color: #9ca3af; font-style: italic; }
+        #preview img { max-width: 100%; height: auto; border-radius: 0.375rem; margin-top: 1rem; margin-bottom: 1rem; }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col">
+    <!-- Main Toolbar Container (Two Rows) -->
+    <header class="bg-gray-800 border-b border-gray-700 text-sm flex flex-col">
+        <!-- Row 1: File Actions, Template Selector, and Primary Utilities -->
+        <div class="p-3 flex flex-wrap gap-3 items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span class="font-bold text-base text-blue-400">GM Walks Markdown Studio</span>
+                
+                <!-- File Actions -->
+                <div class="flex bg-gray-700 rounded border border-gray-600 overflow-hidden">
+                    <button onclick="newDocument()" class="hover:bg-gray-600 px-3 py-1.5 border-r border-gray-600 font-semibold text-emerald-400">New</button>
+                    <button onclick="loadDefaultTemplate()" class="hover:bg-gray-600 px-3 py-1.5 border-r border-gray-600">Load Template</button>
+                    <button onclick="openExistingFile()" class="hover:bg-gray-600 px-3 py-1.5">Open Existing...</button>
+                </div>
+            </div>
+
+            <!-- Right-side actions -->
+            <div class="flex gap-2 items-center">
+                <button onclick="toggleHelpModal()" class="bg-gray-700 hover:bg-gray-600 px-3 py-1.5 rounded border border-gray-600 font-medium text-cyan-400">Help / Guide</button>
+                <button onclick="validateContent()" class="bg-amber-600 hover:bg-amber-500 px-3 py-1.5 rounded font-medium">Run XSLT Pre-Check</button>
+                <button onclick="saveFileAs()" class="bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded font-medium">Save As...</button>
+            </div>
+        </div>
+
+        <!-- Row 2: Formatting Toolbar and Section Snippet Dropdown -->
+        <div class="px-3 pb-3 flex flex-wrap gap-2 items-center bg-gray-800/60 border-t border-gray-700/50 pt-2">
+            <span class="text-xs text-gray-400 font-medium mr-1">Formatting:</span>
+            <!-- Formatting Toolbar -->
+            <div class="flex bg-gray-700 rounded border border-gray-600 overflow-hidden">
+                <button onclick="formatText('bold')" title="Bold" class="hover:bg-gray-600 px-2.5 py-1 font-bold border-r border-gray-600">B</button>
+                <button onclick="formatText('italic')" title="Italic" class="hover:bg-gray-600 px-2.5 py-1 italic border-r border-gray-600">I</button>
+                <button onclick="formatText('quote')" title="Inline Quote" class="hover:bg-gray-600 px-2.5 py-1 border-r border-gray-600">“ ”</button>
+                <button onclick="formatText('blockquote')" title="Blockquote" class="hover:bg-gray-600 px-2.5 py-1 border-r border-gray-600">❝ Quote</button>
+                <button onclick="formatText('link')" title="Insert Link" class="hover:bg-gray-600 px-2.5 py-1 border-r border-gray-600">🔗</button>
+                <button onclick="formatText('image')" title="Insert Image" class="hover:bg-gray-600 px-2.5 py-1 border-r border-gray-600">🖼️</button>
+                <button onclick="formatText('ul')" title="Bullet List" class="hover:bg-gray-600 px-2.5 py-1 border-r border-gray-600">• List</button>
+                <button onclick="formatText('ol')" title="Numbered List" class="hover:bg-gray-600 px-2.5 py-1">1. List</button>
+            </div>
+
+            <div class="h-5 w-px bg-gray-700 mx-2"></div>
+
+            <span class="text-xs text-gray-400 font-medium mr-1">Sections:</span>
+            <!-- Template Section Selector -->
+            <select id="snippetSelector" onchange="insertSnippet(this)" class="bg-gray-700 rounded px-2 py-1 border border-gray-600 text-gray-100 text-sm">
+                <option value="">+ Insert Template Section...</option>
+                <option value="Description"># Description</option>
+                <option value="Directions"># Directions</option>
+                <option value="Notes"># Notes</option>
+                <option value="Pubs"># Pubs</option>
+                <option value="Features"># Features</option>
+                <option value="Updates"># Updates</option>
+                <option value="Images"># Images</option>
+                <option value="Validation"># Validation</option>
+            </select>
+        </div>
+    </header>
+
+    <!-- Validation Status Bar -->
+    <div id="statusBar" class="bg-gray-800 px-4 py-2 text-xs border-b border-gray-700 hidden">
+        <span id="statusText"></span>
+    </div>
+
+    <!-- Editor & Preview Layout -->
+    <div class="flex-1 flex overflow-hidden">
+        <textarea id="editor" spellcheck="true" lang="en" class="w-1/2 p-4 bg-gray-900 text-gray-200 resize-none focus:outline-none font-mono text-sm border-r border-gray-700 overflow-y-auto" placeholder="Start typing or load a template..."></textarea>
+        <div id="preview" class="w-1/2 p-6 overflow-y-auto bg-gray-900"></div>
+    </div>
+
+    <!-- Help / Documentation Modal -->
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-gray-800 border border-gray-700 rounded-lg max-w-2xl w-full max-h-[80vh] flex flex-col shadow-2xl">
+            <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-blue-400">Authoring Guide & Pipeline Rules</h3>
+                <button onclick="toggleHelpModal()" class="text-gray-400 hover:text-gray-200 font-bold text-xl">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-sm text-gray-300">
+                <h4 class="font-semibold text-white text-base">1. Top-Level Section Rules</h4>
+                <p>Only specific top-level headings (`#`) are permitted by the XSLT pipeline schema. Unrecognized top-level headings will fail validation:</p>
+                <ul class="list-disc pl-5 space-y-1 font-mono text-xs text-blue-300">
+                    <li># Description</li>
+                    <li># Directions</li>
+                    <li># Notes (Supports ## References)</li>
+                    <li># Pubs (Supports ## Pub Name, Place name)</li>
+                    <li># Features (Supports ## Feature Name)</li>
+                    <li># Updates</li>
+                    <li># Images</li>
+                    <li># Validation (Supports ## Date sub-headers)</li>
+                </ul>
+
+                <h4 class="font-semibold text-white text-base mt-4">2. Auto-Backup & Recovery</h4>
+                <p>Your work is automatically saved to your browser's local storage on every keystroke. If you accidentally close the tab, your draft will be automatically restored when you reopen the page.</p>
+
+                <h4 class="font-semibold text-white text-base mt-4">3. Pre-Flight Validation</h4>
+                <p>Click <strong>Run XSLT Pre-Check</strong> before exporting to verify that all your section headings adhere to the whitelist and that no duplicate header IDs exist.</p>
+            </div>
+            <div class="p-4 border-t border-gray-700 flex justify-end">
+                <button onclick="toggleHelpModal()" class="bg-blue-600 hover:bg-blue-500 px-4 py-2 rounded text-sm font-medium text-white">Close Guide</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ALLOWED_TOP_LEVEL_SECTIONS = [
+            "Description",
+            "Directions",
+            "Notes",
+            "Pubs",
+            "Features",
+            "Updates",
+            "Images",
+            "Validation"
+        ];
+
+        const BASE_TEMPLATE = `# Description
+
+*Key description*
+
+Short description
+
+# Directions
+
+Introductory Paragraph
+
+1. directions list
+
+# Notes
+
+General notes about the walk
+
+## References
+
+1. [reference name](ref uri)
+
+# Pubs
+
+## Pub Name, Place name
+
+![pub image name](image uri)
+
+Address
+: address
+
+Website
+: [uri](uri)
+
+description para(s)
+
+# Features
+
+Intro description
+
+## Feature Name
+
+Description
+
+# Updates
+2026-06-17
+: Initial publication
+
+# Images
+
+![The river Gaunless flowing through the Auckland Palace Deer Park](https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhAaPqn3HVN2dMi42XO1Oe6D7II9gCQISQORI1BoA4pWyHDFcSmkshKG8m0zSbDCIz5Orri00CNMeerlDRnXiLrc9EZ3rUL5jkCcoLb9AmwTB6X8xzGU8kG5GJ8J-pyGtwe3KcwW3Lr_nVeSv6G33DOOIy6wuhiJCAVKKbRUOTB4575rm6GaSRfbn1ckBM/s600/20260608_180848.jpg)
+
+# Validation
+
+## 2026-08-11
+
+- **Time of Walk:** 08:00 to 11:00
+- **Validators:** Griff
+- **Weather Conditions:** Sunny day and warm
+- **Notes:** Horses on the heath
+`;
+
+        const snippets = {
+            Description: `\n# Description\n\n*Key description*\n\nShort description\n`,
+            Directions: `\n# Directions\n\nIntroductory Paragraph\n\n1. directions list\n`,
+            Notes: `\n# Notes\n\nGeneral notes about the walk\n\n## References\n\n1. [reference name](ref uri)\n`,
+            Pubs: `\n# Pubs\n\n## Pub Name, Place name\n\n![pub image name](image uri)\n\nAddress\n: address\n\nWebsite\n: [uri](uri)\n\ndescription para(s)\n`,
+            Features: `\n# Features\n\nIntro description\n\n## Feature Name\n\nDescription\n`,
+            Updates: `\n# Updates\n2026-06-17\n: Initial publication\n`,
+            Images: `\n# Images\n\n![Image caption](image_uri)\n`,
+            Validation: `\n# Validation\n\n## 2026-08-11\n\n- **Time of Walk:** 08:00 to 11:00\n- **Validators:** Griff\n- **Weather Conditions:** Sunny day and warm\n- **Notes:** Horses on the heath\n`
+        };
+
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const statusBar = document.getElementById('statusBar');
+        const statusText = document.getElementById('statusText');
+        const helpModal = document.getElementById('helpModal');
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedBackup = localStorage.getItem('md_pipeline_backup');
+            if (savedBackup !== null) {
+                editor.value = savedBackup;
+                updatePreview();
+                showStatus("Restored unsubmitted draft from automatic backup.", "text-blue-400");
+            } else {
+                editor.value = "";
+                updatePreview();
+            }
+        });
+
+        editor.addEventListener('input', () => {
+            updatePreview();
+            localStorage.setItem('md_pipeline_backup', editor.value);
+        });
+
+        function updatePreview() {
+            preview.innerHTML = marked.parse(editor.value);
+        }
+
+        function toggleHelpModal() {
+            helpModal.classList.toggle('hidden');
+        }
+
+        function newDocument() {
+            if (editor.value.trim() !== "" && !confirm("Start a blank document? Any unsaved work not exported will be cleared.")) {
+                return;
+            }
+            localStorage.removeItem('md_pipeline_backup');
+            editor.value = "";
+            updatePreview();
+            showStatus("Started a new blank document.", "text-green-400");
+        }
+
+        function loadDefaultTemplate() {
+            if (editor.value.trim() !== "" && !confirm("Load template? This will replace your current text.")) {
+                return;
+            }
+            editor.value = BASE_TEMPLATE;
+            localStorage.setItem('md_pipeline_backup', editor.value);
+            updatePreview();
+            showStatus("Default template loaded successfully.", "text-green-400");
+        }
+
+        async function openExistingFile() {
+            try {
+                const [fileHandle] = await window.showOpenFilePicker({
+                    types: [{ description: 'Markdown Files', accept: { 'text/markdown': ['.md'] } }]
+                });
+                const file = await fileHandle.getFile();
+                editor.value = await file.text();
+                localStorage.setItem('md_pipeline_backup', editor.value);
+                updatePreview();
+                showStatus(`Opened existing file: ${file.name}`, "text-green-400");
+            } catch (err) {}
+        }
+
+        function formatText(type) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+            let replacement = "";
+
+            switch (type) {
+                case 'bold': replacement = `**${selectedText || 'bold text'}**`; break;
+                case 'italic': replacement = `*${selectedText || 'italic text'}*`; break;
+                case 'quote': replacement = `"${selectedText || 'quoted text'}"`; break;
+                case 'blockquote': replacement = `\n> ${selectedText || 'Blockquote text'}\n`; break;
+                case 'link': replacement = `[${selectedText || 'link text'}](https://example.com)`; break;
+                case 'image': replacement = `![${selectedText || 'alt text description'}](images/filename.jpg)`; break;
+                case 'ul': replacement = `\n- ${selectedText || 'List item'}\n`; break;
+                case 'ol': replacement = `\n1. ${selectedText || 'List item'}\n`; break;
+            }
+
+            editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + replacement.length;
+            editor.focus();
+            localStorage.setItem('md_pipeline_backup', editor.value);
+            updatePreview();
+        }
+
+        function insertSnippet(selectEl) {
+            const key = selectEl.value;
+            if (!key || !snippets[key]) return;
+
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+
+            editor.value = text.substring(0, start) + snippets[key] + text.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + snippets[key].length;
+            editor.focus();
+            localStorage.setItem('md_pipeline_backup', editor.value);
+            updatePreview();
+            selectEl.value = ""; 
+        }
+
+        function validateContent() {
+            const content = editor.value;
+            let errors = [];
+
+            if (content.startsWith('---') && !content.includes('title:')) {
+                errors.push("Frontmatter missing required 'title' field.");
+            }
+
+            const headingRegex = /^(#{1,6})\s+(.+)$/gm;
+            let match;
+            let seenTopLevelSections = new Set();
+            let seenAllHeadings = new Set();
+
+            while ((match = headingRegex.exec(content)) !== null) {
+                const hashes = match[1];
+                let headingText = match[2].trim().replace(/\s+\{\#[^}]+\}$/, '');
+
+                if (seenAllHeadings.has(headingText)) {
+                    errors.push(`Duplicate heading title found: "${headingText}" (causes conflicting section IDs).`);
+                } else {
+                    seenAllHeadings.add(headingText);
+                }
+
+                if (hashes.length === 1) {
+                    if (!ALLOWED_TOP_LEVEL_SECTIONS.includes(headingText)) {
+                        errors.push(`Unauthorized top-level section title: "# ${headingText}" (not permitted by template schema).`);
+                    } else {
+                        if (seenTopLevelSections.has(headingText)) {
+                            errors.push(`Duplicate top-level section: "# ${headingText}" appears more than once.`);
+                        } else {
+                            seenTopLevelSections.add(headingText);
+                        }
+                    }
+                }
+            }
+
+            statusBar.classList.remove('hidden');
+            if (errors.length > 0) {
+                statusText.className = "text-red-400 font-semibold";
+                statusText.innerHTML = "❌ Validation Failed: " + errors.join(" | ");
+            } else {
+                statusText.className = "text-green-400 font-semibold";
+                statusText.textContent = "✅ Validation Passed: All top-level sections match template rules and generate unique IDs.";
+            }
+        }
+
+        function showStatus(msg, className) {
+            statusBar.classList.remove('hidden');
+            statusText.className = className;
+            statusText.textContent = msg;
+        }
+
+        function saveFileAs() {
+            const content = editor.value;
+            let defaultName = "document.md";
+            const titleMatch = content.match(/title:\s*["']?([^"'\n]+)["']?/);
+            if (titleMatch && titleMatch[1]) {
+                defaultName = titleMatch[1].trim().toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.md';
+            }
+
+            const customName = prompt("Enter filename for export:", defaultName);
+            if (!customName) return; 
+
+            const filename = customName.endsWith('.md') ? customName : customName + '.md';
+            const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showStatus(`Successfully exported as: ${filename}`, "text-green-400");
+        }
+    </script>
+</body>
+</html>
