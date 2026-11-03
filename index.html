@@ -195,7 +195,7 @@ Description
 1. [reference name](ref uri)
 
 # Updates
-2026-06-17
+${new Date().toISOString().split('T')[0]}
 : Initial publication
 
 # Images
@@ -204,7 +204,7 @@ Description
 
 # Validation
 
-## 2026-08-11
+## ${new Date().toISOString().split('T')[0]}
 
 - **Time of Walk:** 08:00 to 11:00
 - **Validators:** Griff
@@ -218,13 +218,13 @@ Description
             Notes: `\n# Notes\n\nGeneral notes about the walk\n\n## References\n\n1. [reference name](ref uri)\n`,
             Pubs: `\n# Pubs\n\n## Pub Name, Place name\n\n![pub image name](image uri)\n\nAddress\n: address\n\nWebsite\n: [uri](uri)\n\ndescription para(s)\n`,
             Features: `\n# Features\n\nIntro description\n\n## Feature Name\n\nDescription\n\n### References\n\n1. [reference name](ref uri)\n`,
-            Updates: `\n# Updates\n2026-06-17\n: Initial publication\n`,
+            Updates: `\n# Updates\n${new Date().toISOString().split('T')[0]}\n: Initial publication\n`,
             Images: `\n# Images\n\n![Image caption](image_uri)\n`,
-            Validation: `\n# Validation\n\n## 2026-08-11\n\n- **Time of Walk:** 08:00 to 11:00\n- **Validators:** Griff\n- **Weather Conditions:** Sunny day and warm\n- **Notes:** Horses on the heath\n`,
+            Validation: `\n# Validation\n\n## ${new Date().toISOString().split('T')[0]}\n\n- **Time of Walk:** 08:00 to 11:00\n- **Validators:** Griff\n- **Weather Conditions:** Sunny day and warm\n- **Notes:** Horses on the heath\n`,
             FeatureSub: `\n## Feature Name\n\nDescription\n\n### References\n\n1. [reference name](ref uri)\n`,
             PubSub: `\n## Pub Name, Place name\n\n![pub image name](image uri)\n\nAddress\n: address\n\nWebsite\n: [uri](uri)\n\ndescription para(s)\n`,
             ReferencesSub: `\n### References\n\n1. [reference name](ref uri)\n`,
-            ValidationSub: `\n## 2026-08-11\n\n- **Time of Walk:** 08:00 to 11:00\n- **Validators:** Griff\n- **Weather Conditions:** Sunny day and warm\n- **Notes:** Horses on the heath\n`
+            ValidationSub: `\n## ${new Date().toISOString().split('T')[0]}1\n\n- **Time of Walk:** 08:00 to 11:00\n- **Validators:** Griff\n- **Weather Conditions:** Sunny day and warm\n- **Notes:** Horses on the heath\n`
         };
 
         const editor = document.getElementById('editor');
